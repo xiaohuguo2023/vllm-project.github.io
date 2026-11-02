@@ -1,0 +1,202 @@
+rank,start_ms,dur_ms,category,label,kernel
+0,0.0,0.0163,attention,attention,kernel_unified_attention_2d
+0,0.2668,0.0568,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT224x128x32_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+0,0.3237,0.1616,allreduce,QuickReduce two-shot all-reduce,"void quickreduce::allreduce_prototype_twoshot<quickreduce::AllReduceTwoshot<__half, quickreduce:"
+0,0.4853,0.0262,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0
+0,0.5115,0.0282,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x32x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_ASE
+0,0.5397,0.0128,other,routing / norm / elementwise,triton_poi_fused_constant_pad_nd_moe_forward_1
+0,0.7744,0.0066,other,routing / norm / elementwise,_topk_forward
+0,0.8112,0.0075,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+0,0.822,0.0062,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+0,0.8363,0.0017,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned int>, std::ar"
+0,0.892,0.0253,other,routing / norm / elementwise,pack_bitmatrix
+0,0.9174,0.0033,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::AUnaryFunctor<short, short, bool, "
+0,0.9282,0.0014,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::a"
+0,0.9389,0.0063,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 8, at::native::gpu_kernel_impl_nocast<at:"
+0,0.9922,0.0012,other,routing / norm / elementwise,_sum_bitmatrix_memset
+0,1.0679,0.0036,other,routing / norm / elementwise,_sum_bitmatrix_rows
+0,4.0492,0.0039,other,routing / norm / elementwise,_combined_routing_memset
+0,4.1755,0.0049,other,routing / norm / elementwise,_combined_routing_compute
+0,4.8281,0.2718,moe,MoE gate/up GEMM + SwiGLU,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1_swiglu
+0,8.709,0.2056,moe,MoE down GEMM,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1
+0,8.9147,0.0354,moe,MoE finalize / scatter,_finalize_matmul_scatter_bf16
+0,8.9501,0.1664,allreduce,QuickReduce two-shot all-reduce,"void quickreduce::allreduce_prototype_twoshot<quickreduce::AllReduceTwoshot<__half, quickreduce:"
+0,9.1165,0.0401,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rocm_unquantized_gemm_rsqrt_slice_2
+0,9.1566,0.0374,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x160x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+0,9.194,0.0096,other,routing / norm / elementwise,triton_poi_fused_3
+0,9.2036,0.0064,other,routing / norm / elementwise,"void vllm::reshape_and_cache_flash_kernel<__hip_bfloat16, __hip_bfloat16, (vllm::Fp8KVCacheDataT"
+1,0.4858,0.0282,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0
+1,0.514,0.0279,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x32x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_ASE
+1,0.5419,0.0132,other,routing / norm / elementwise,triton_poi_fused_constant_pad_nd_moe_forward_1
+1,0.5551,0.0056,other,routing / norm / elementwise,_topk_forward
+1,0.5606,0.008,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+1,0.5686,0.0076,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+1,0.5762,0.0043,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned int>, std::ar"
+1,0.5806,0.0238,other,routing / norm / elementwise,pack_bitmatrix
+1,0.6043,0.0041,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::AUnaryFunctor<short, short, bool, "
+1,0.6084,0.0041,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::a"
+1,0.6125,0.0057,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 8, at::native::gpu_kernel_impl_nocast<at:"
+1,0.6182,0.0044,other,routing / norm / elementwise,_sum_bitmatrix_memset
+1,0.6226,0.005,other,routing / norm / elementwise,_sum_bitmatrix_rows
+1,0.6276,0.0045,other,routing / norm / elementwise,_combined_routing_memset
+1,0.6321,0.0048,other,routing / norm / elementwise,_combined_routing_compute
+1,0.6369,0.2642,moe,MoE gate/up GEMM + SwiGLU,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1_swiglu
+1,1.0365,0.2016,moe,MoE down GEMM,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1
+1,1.2381,0.0357,moe,MoE finalize / scatter,_finalize_matmul_scatter_bf16
+1,1.2738,7.843,allreduce,QuickReduce two-shot all-reduce,"void quickreduce::allreduce_prototype_twoshot<quickreduce::AllReduceTwoshot<__half, quickreduce:"
+1,9.1168,0.0395,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rocm_unquantized_gemm_rsqrt_slice_2
+1,9.1563,0.0362,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x160x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+1,9.1925,0.0096,other,routing / norm / elementwise,triton_poi_fused_3
+1,9.202,0.0066,other,routing / norm / elementwise,"void vllm::reshape_and_cache_flash_kernel<__hip_bfloat16, __hip_bfloat16, (vllm::Fp8KVCacheDataT"
+1,9.2086,0.0436,attention,attention,kernel_unified_attention_2d
+1,9.2523,0.0551,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT224x128x32_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+2,0.4853,0.0282,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0
+2,0.5135,0.0292,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x32x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_ASE
+2,0.5427,0.0129,other,routing / norm / elementwise,triton_poi_fused_constant_pad_nd_moe_forward_1
+2,0.5556,0.0058,other,routing / norm / elementwise,_topk_forward
+2,0.5614,0.0084,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+2,0.5699,0.0073,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+2,0.5772,0.0041,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned int>, std::ar"
+2,0.5813,0.0242,other,routing / norm / elementwise,pack_bitmatrix
+2,0.6056,0.004,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::AUnaryFunctor<short, short, bool, "
+2,0.6096,0.0039,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::a"
+2,0.6134,0.0064,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 8, at::native::gpu_kernel_impl_nocast<at:"
+2,0.6198,0.004,other,routing / norm / elementwise,_sum_bitmatrix_memset
+2,0.6239,0.0046,other,routing / norm / elementwise,_sum_bitmatrix_rows
+2,0.6284,0.0046,other,routing / norm / elementwise,_combined_routing_memset
+2,0.6331,0.0047,other,routing / norm / elementwise,_combined_routing_compute
+2,0.6377,0.267,moe,MoE gate/up GEMM + SwiGLU,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1_swiglu
+2,2.7926,0.2007,moe,MoE down GEMM,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1
+2,2.9933,0.0362,moe,MoE finalize / scatter,_finalize_matmul_scatter_bf16
+2,3.0295,6.0865,allreduce,QuickReduce two-shot all-reduce,"void quickreduce::allreduce_prototype_twoshot<quickreduce::AllReduceTwoshot<__half, quickreduce:"
+2,9.116,0.043,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rocm_unquantized_gemm_rsqrt_slice_2
+2,9.159,0.0376,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x160x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+2,9.1966,0.0096,other,routing / norm / elementwise,triton_poi_fused_3
+2,9.2062,0.0066,other,routing / norm / elementwise,"void vllm::reshape_and_cache_flash_kernel<__hip_bfloat16, __hip_bfloat16, (vllm::Fp8KVCacheDataT"
+2,9.2128,0.045,attention,attention,kernel_unified_attention_2d
+2,9.2577,0.0545,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT224x128x32_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+3,0.4855,0.0274,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0
+3,0.5129,0.0279,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x32x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_ASE
+3,0.5408,0.013,other,routing / norm / elementwise,triton_poi_fused_constant_pad_nd_moe_forward_1
+3,0.5538,0.0056,other,routing / norm / elementwise,_topk_forward
+3,0.5593,0.0082,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+3,0.5675,0.0074,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+3,0.5749,0.0043,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned int>, std::ar"
+3,0.5792,0.0237,other,routing / norm / elementwise,pack_bitmatrix
+3,0.6029,0.0041,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::AUnaryFunctor<short, short, bool, "
+3,0.607,0.018,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::a"
+3,0.6251,0.0066,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 8, at::native::gpu_kernel_impl_nocast<at:"
+3,0.6317,0.0042,other,routing / norm / elementwise,_sum_bitmatrix_memset
+3,0.6359,0.0046,other,routing / norm / elementwise,_sum_bitmatrix_rows
+3,0.6406,0.0044,other,routing / norm / elementwise,_combined_routing_memset
+3,0.645,0.0384,other,routing / norm / elementwise,_combined_routing_compute
+3,0.6834,0.2639,moe,MoE gate/up GEMM + SwiGLU,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1_swiglu
+3,0.9473,0.1978,moe,MoE down GEMM,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1
+3,1.1451,0.0378,moe,MoE finalize / scatter,_finalize_matmul_scatter_bf16
+3,1.1828,7.9344,allreduce,QuickReduce two-shot all-reduce,"void quickreduce::allreduce_prototype_twoshot<quickreduce::AllReduceTwoshot<__half, quickreduce:"
+3,9.1172,0.041,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rocm_unquantized_gemm_rsqrt_slice_2
+3,9.1582,0.0364,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x160x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+3,9.1947,0.0095,other,routing / norm / elementwise,triton_poi_fused_3
+3,9.2042,0.0068,other,routing / norm / elementwise,"void vllm::reshape_and_cache_flash_kernel<__hip_bfloat16, __hip_bfloat16, (vllm::Fp8KVCacheDataT"
+3,9.211,0.0437,attention,attention,kernel_unified_attention_2d
+3,9.2547,0.0549,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT224x128x32_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+4,0.4859,0.0278,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0
+4,0.5138,0.0282,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x32x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_ASE
+4,0.542,0.0132,other,routing / norm / elementwise,triton_poi_fused_constant_pad_nd_moe_forward_1
+4,0.5551,0.0056,other,routing / norm / elementwise,_topk_forward
+4,0.5607,0.0077,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+4,0.5684,0.0075,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+4,0.5759,0.0045,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned int>, std::ar"
+4,0.5804,0.0243,other,routing / norm / elementwise,pack_bitmatrix
+4,0.6047,0.0043,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::AUnaryFunctor<short, short, bool, "
+4,0.609,0.0042,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::a"
+4,0.6132,0.0072,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 8, at::native::gpu_kernel_impl_nocast<at:"
+4,0.6204,0.0046,other,routing / norm / elementwise,_sum_bitmatrix_memset
+4,0.625,0.0052,other,routing / norm / elementwise,_sum_bitmatrix_rows
+4,0.6302,0.0048,other,routing / norm / elementwise,_combined_routing_memset
+4,0.6351,0.0049,other,routing / norm / elementwise,_combined_routing_compute
+4,0.64,0.2636,moe,MoE gate/up GEMM + SwiGLU,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1_swiglu
+4,0.9036,0.198,moe,MoE down GEMM,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1
+4,1.1016,0.0358,moe,MoE finalize / scatter,_finalize_matmul_scatter_bf16
+4,1.1373,7.9796,allreduce,QuickReduce two-shot all-reduce,"void quickreduce::allreduce_prototype_twoshot<quickreduce::AllReduceTwoshot<__half, quickreduce:"
+4,9.117,0.0389,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rocm_unquantized_gemm_rsqrt_slice_2
+4,9.1559,0.0384,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x160x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+4,9.1942,0.0095,other,routing / norm / elementwise,triton_poi_fused_3
+4,9.2037,0.0068,other,routing / norm / elementwise,"void vllm::reshape_and_cache_flash_kernel<__hip_bfloat16, __hip_bfloat16, (vllm::Fp8KVCacheDataT"
+4,9.2105,0.0446,attention,attention,kernel_unified_attention_2d
+4,9.2551,0.0553,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT224x128x32_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+5,0.4861,0.0276,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0
+5,0.5137,0.0281,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x32x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_ASE
+5,0.5418,0.0128,other,routing / norm / elementwise,triton_poi_fused_constant_pad_nd_moe_forward_1
+5,0.5546,0.0056,other,routing / norm / elementwise,_topk_forward
+5,0.5601,0.0088,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+5,0.569,0.0076,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+5,0.5765,0.0046,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned int>, std::ar"
+5,0.5811,0.024,other,routing / norm / elementwise,pack_bitmatrix
+5,0.6051,0.0043,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::AUnaryFunctor<short, short, bool, "
+5,0.6094,0.0042,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::a"
+5,0.6136,0.0062,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 8, at::native::gpu_kernel_impl_nocast<at:"
+5,0.6198,0.0051,other,routing / norm / elementwise,_sum_bitmatrix_memset
+5,0.6249,0.0052,other,routing / norm / elementwise,_sum_bitmatrix_rows
+5,0.63,0.0048,other,routing / norm / elementwise,_combined_routing_memset
+5,0.6349,0.0049,other,routing / norm / elementwise,_combined_routing_compute
+5,0.6398,0.2678,moe,MoE gate/up GEMM + SwiGLU,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1_swiglu
+5,0.9076,0.202,moe,MoE down GEMM,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1
+5,1.1097,0.0359,moe,MoE finalize / scatter,_finalize_matmul_scatter_bf16
+5,1.1456,7.9721,allreduce,QuickReduce two-shot all-reduce,"void quickreduce::allreduce_prototype_twoshot<quickreduce::AllReduceTwoshot<__half, quickreduce:"
+5,9.1177,0.04,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rocm_unquantized_gemm_rsqrt_slice_2
+5,9.1577,0.0378,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x160x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+5,9.1954,0.0096,other,routing / norm / elementwise,triton_poi_fused_3
+5,9.205,0.0068,other,routing / norm / elementwise,"void vllm::reshape_and_cache_flash_kernel<__hip_bfloat16, __hip_bfloat16, (vllm::Fp8KVCacheDataT"
+5,9.2117,0.0439,attention,attention,kernel_unified_attention_2d
+5,9.2556,0.0554,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT224x128x32_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+6,0.4963,0.0282,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0
+6,0.5245,0.0277,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x32x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_ASE
+6,0.5522,0.0133,other,routing / norm / elementwise,triton_poi_fused_constant_pad_nd_moe_forward_1
+6,0.5655,0.0057,other,routing / norm / elementwise,_topk_forward
+6,0.5712,0.0069,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+6,0.5781,0.0069,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+6,0.585,0.0047,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned int>, std::ar"
+6,0.5897,0.0242,other,routing / norm / elementwise,pack_bitmatrix
+6,0.6138,0.0044,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::AUnaryFunctor<short, short, bool, "
+6,0.6183,0.0044,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::a"
+6,0.6226,0.0067,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 8, at::native::gpu_kernel_impl_nocast<at:"
+6,0.6293,0.0047,other,routing / norm / elementwise,_sum_bitmatrix_memset
+6,0.634,0.0051,other,routing / norm / elementwise,_sum_bitmatrix_rows
+6,0.6391,0.0048,other,routing / norm / elementwise,_combined_routing_memset
+6,0.6439,0.0048,other,routing / norm / elementwise,_combined_routing_compute
+6,0.6487,0.2658,moe,MoE gate/up GEMM + SwiGLU,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1_swiglu
+6,0.9144,0.2007,moe,MoE down GEMM,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1
+6,1.1151,0.0354,moe,MoE finalize / scatter,_finalize_matmul_scatter_bf16
+6,1.1505,7.9674,allreduce,QuickReduce two-shot all-reduce,"void quickreduce::allreduce_prototype_twoshot<quickreduce::AllReduceTwoshot<__half, quickreduce:"
+6,9.1179,0.0387,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rocm_unquantized_gemm_rsqrt_slice_2
+6,9.1567,0.0372,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x160x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+6,9.1939,0.0096,other,routing / norm / elementwise,triton_poi_fused_3
+6,9.2035,0.0068,other,routing / norm / elementwise,"void vllm::reshape_and_cache_flash_kernel<__hip_bfloat16, __hip_bfloat16, (vllm::Fp8KVCacheDataT"
+6,9.2103,0.0445,attention,attention,kernel_unified_attention_2d
+6,9.2548,0.0529,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT224x128x32_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+7,0.4861,0.0281,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0
+7,0.5142,0.0276,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x32x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_ASE
+7,0.5418,0.0132,other,routing / norm / elementwise,triton_poi_fused_constant_pad_nd_moe_forward_1
+7,0.555,0.0058,other,routing / norm / elementwise,_topk_forward
+7,0.5608,0.0084,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+7,0.5692,0.0072,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 4, at::native::gpu_kernel_impl<at::native"
+7,0.5764,0.0044,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<unsigned int>, std::ar"
+7,0.5808,0.0239,other,routing / norm / elementwise,pack_bitmatrix
+7,0.6048,0.0043,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::AUnaryFunctor<short, short, bool, "
+7,0.6091,0.0043,other,routing / norm / elementwise,"void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::a"
+7,0.6134,0.0055,other,routing / norm / elementwise,"void at::native::elementwise_kernel_manual_unroll<128, 8, at::native::gpu_kernel_impl_nocast<at:"
+7,0.6189,0.0046,other,routing / norm / elementwise,_sum_bitmatrix_memset
+7,0.6235,0.005,other,routing / norm / elementwise,_sum_bitmatrix_rows
+7,0.6286,0.0047,other,routing / norm / elementwise,_combined_routing_memset
+7,0.6332,0.0048,other,routing / norm / elementwise,_combined_routing_compute
+7,0.638,0.2618,moe,MoE gate/up GEMM + SwiGLU,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1_swiglu
+7,0.8998,0.1993,moe,MoE down GEMM,_matmul_ogs_NNT_bf16xbf16xmxfp4_64x512x256x1
+7,1.0991,0.0359,moe,MoE finalize / scatter,_finalize_matmul_scatter_bf16
+7,1.135,7.9822,allreduce,QuickReduce two-shot all-reduce,"void quickreduce::allreduce_prototype_twoshot<quickreduce::AllReduceTwoshot<__half, quickreduce:"
+7,9.1172,0.039,other,routing / norm / elementwise,triton_red_fused__to_copy_add_mean_mul_pow_rocm_unquantized_gemm_rsqrt_slice_2
+7,9.1562,0.0366,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT128x160x64_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
+7,9.1928,0.0095,other,routing / norm / elementwise,triton_poi_fused_3
+7,9.2023,0.0069,other,routing / norm / elementwise,"void vllm::reshape_and_cache_flash_kernel<__hip_bfloat16, __hip_bfloat16, (vllm::Fp8KVCacheDataT"
+7,9.2092,0.0438,attention,attention,kernel_unified_attention_2d
+7,9.253,0.0543,gemm,dense GEMM (Tensile),Cijk_Alik_Bljk_BBS_BH_Bias_HA_S_SAV_UserArgs_MT224x128x32_MI16x16x1_SN_LDSB1_AFC1_AFEM1_AFEM1_AS
