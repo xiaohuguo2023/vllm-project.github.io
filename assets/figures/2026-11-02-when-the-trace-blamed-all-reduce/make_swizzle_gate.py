@@ -6,9 +6,9 @@ Top panel  -- a heatmap over the 28 TP4/TP8 serving cells, showing swizzled
               paths were retuned before the comparison, so this is a fair
               layout A/B and not a tuned-vs-untuned artefact.
 Bottom     -- why. The CDNA4 swizzled scale layout requires BLOCK_K >= 256.
-              The MoE down-projection contracts over K = 2880 / TP, so at
-              TP8 the K extent the kernel must step through is forced up
-              from 384 to 512 elements, 42% of which is masked.
+              The decode down-projection contracts over K = 2880 / TP, so at
+              TP8 the K extent the kernel steps through goes from 384 to 512
+              elements: 152 of the 512 are masked, against 24 of the 384.
 
 Data provenance
 ---------------

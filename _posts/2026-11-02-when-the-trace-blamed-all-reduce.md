@@ -28,7 +28,7 @@ Repeated runs confirmed that the problem was outside GPU computation. GPU comput
 
 We replaced unstable kernel paths with AITER kernels and captured more serving shapes in HIP graphs. This removed the large host stalls. After re-profiling, the main GPU bottleneck was the W4A8 grouped MoE GEMM. Roofline analysis showed that decode was limited mainly by HBM bandwidth, while prefill had more room to improve compute efficiency.
 
-Across the matched benchmark cells, the complete set of changes improved geometric-mean throughput by 1.63x for decode-heavy traffic and 1.48x for prefill-heavy traffic. The best individual cells improved by 2.3-2.4x.
+Across the matched benchmark cells, the complete set of changes improved geometric-mean throughput by 1.63x for decode-heavy traffic and 1.53x for prefill-heavy traffic. The best individual cells improved by 2.3-2.4x.
 
 The main lesson is a workflow that developers can reuse:
 
@@ -351,7 +351,7 @@ Both the weight-load layout and kernel argument use the same `should_use_cdna4_m
 
 *Each cell is a measured A/B test between the two retuned layouts. Tests used the same container image, with the vLLM torch-compile, Triton, and inductor caches purged before each cell. Treating results within 2% as ties, the strided layout wins 23 cells, the swizzled layout wins 3, and 2 are ties. Swizzling trails in all 14 decode-heavy 1K/1K cells, by as much as 18.9%. It retains an advantage only for prefill-heavy 8K/1K traffic at 128 and 256 concurrent requests.*
 
-*The lower panel derives the mechanism from the two tuned dispatch JSONs. The swizzled MX-scale layout requires `BLOCK_K` of at least 256, and the MoE down-projection contracts over K = 2880/TP. At TP8, this constraint forces K = 360 up to a 512-element extent, 42% of it masked, compared with 384 for the strided choice of `BLOCK_K` = 128. At TP4, both layouts reach 768, so padding does not explain the TP4 losses. Instead, the constraint doubles the K step from 128 to 256. These results compare layouts at the same tuning quality; they do not characterize the swizzled path in general.*
+*The lower panel derives the mechanism from the two tuned dispatch JSONs. Both paths were retuned before the comparison, so this is a layout A/B at matched tuning quality, not a tuned-versus-untuned artefact. The swizzled MX-scale layout makes scale loads more efficient but requires `BLOCK_K` of at least 256. For the decode down-projection, which contracts over K = 2880/TP, that constraint is expensive: at TP8, K = 360, and the tuned swizzled entry steps a 512-element extent against the strided entry's 384, so 152 elements of every pass are masked against 24. Masked elements are work the GPU performs and discards, and here that discarded compute outweighs the scale-load saving. At TP4 both paths land on 768 and mask the same 48 elements; there the layouts differ only in the K step, 256 against 128. The gate follows the measurement: strided at TP4 and TP8, swizzled at TP1 and TP2, where it wins.*
 
 The generation script and its input data are included with the article: [`make_swizzle_gate.py`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/make_swizzle_gate.py) and [`swizzle_ab_28cell.csv`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/swizzle_ab_28cell.csv).
 
@@ -428,7 +428,7 @@ The optimizations interact, so their gains should not be added. Each change is e
 | Wider graph capture | Repeated TP8 runs | Residual imbalance reduced to 6-12%; 130-160 ms stalls removed |
 | Grouped-GEMM tuning | Kernel dispatch and hot shapes | Better gfx950 tile/stage choices; quantifying the standalone full-sweep contribution requires raw ablation data |
 | Swizzle gate | 28 TP4/TP8 cells | Strided layout won 23 cells; up to 19% on selected 1K/1K cells |
-| Full stack | 56-cell serving sweep | 1.63x decode-heavy geomean; 1.48x prefill-heavy geomean; up to 2.3-2.4x on individual cells |
+| Full stack | 56-cell serving sweep | 1.63x decode-heavy geomean; 1.53x prefill-heavy geomean; up to 2.3-2.4x on individual cells |
 
 ![Ablation of the gpt-oss-120B W4A8 MI355X stack, split into three panels by metric: a cumulative profiled-window waterfall, separately measured changes as cards, and the end-to-end 32-cell throughput sweep](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/ablation.png)
 
@@ -445,7 +445,7 @@ We evaluated TP1, TP2, TP4, and TP8 over concurrency 4-256 for two request shape
 Against the previously published MI355X-vLLM results on the same serving harness, the optimized stack delivered:
 
 - **1.63x geometric-mean throughput improvement** on decode-heavy 1K/1K traffic;
-- **1.48x geometric-mean throughput improvement** on prefill-heavy 8K/1K traffic;
+- **1.53x geometric-mean throughput improvement** on prefill-heavy 8K/1K traffic;
 - **2.3-2.4x** on the best individual cells.
 
 These are full-stack results. They combine more complete graph capture, stable AITER paths, grouped-GEMM tuning, correctness hardening, and TP-aware layout selection.
@@ -557,7 +557,7 @@ The sequence matters more than any single kernel change.
 - **Controlled experiments establish the cause.**
 - **Re-profiling reveals the next bottleneck.**
 
-The combined vLLM and AITER changes improved the MI355X serving sweep by 1.63x geometric mean on decode-heavy traffic and 1.48x on prefill-heavy traffic, with all changes upstreamed or represented by upstream work. More importantly, the investigation produced a reusable method for the next model, the next kernel, and the next accelerator:
+The combined vLLM and AITER changes improved the MI355X serving sweep by 1.63x geometric mean on decode-heavy traffic and 1.53x on prefill-heavy traffic, with all changes upstreamed or represented by upstream work. More importantly, the investigation produced a reusable method for the next model, the next kernel, and the next accelerator:
 
 > **Measure. Bound. Falsify. Fix. Re-profile.**
 
@@ -565,7 +565,7 @@ The combined vLLM and AITER changes improved the MI355X serving sweep by 1.63x g
 
 ## Appendix A: Dated cross-platform snapshot
 
-For context, we also compare the optimized MI355X results with dated B200 vLLM and TensorRT-LLM snapshots under the same model and serving harness.
+For context only, we place the optimized MI355X results beside dated B200 vLLM and TensorRT-LLM snapshots of the same model. These are not matched runs: the snapshots were collected separately, on different hardware, under an older software stack, as the versions below show. Read them as a dated reference point rather than a controlled comparison.
 
 On decode-heavy 1K/1K traffic, the reported peak per-GPU throughputs were:
 
