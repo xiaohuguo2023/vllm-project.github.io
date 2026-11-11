@@ -40,7 +40,7 @@ The main lesson is a workflow that developers can reuse:
 
 A plausible first explanation can still point to the wrong bottleneck.
 
-A profiler can accurately report that a GPU spent time inside an all-reduce range. It cannot, by itself, tell us whether that time was spent moving bytes, waiting for another rank, waiting for the host to submit work, or absorbing delay created earlier in the execution path. Attribution is not causality.
+A profiler shows how long a GPU remains inside an all-reduce range, but that range includes more than data transfer. It can also include waiting for peer ranks, host dispatch delays, and skew from earlier kernels. The trace attributes time to all-reduce; it does not prove that all-reduce caused the delay.
 
 [`gpt-oss-120b`](https://openai.com/index/introducing-gpt-oss/) shows this distinction clearly. The model has 36 layers, 128 experts, and activates four experts per token. The AMD checkpoint used here stores MoE weights in MXFP4 and uses FP8 activations, which we refer to as W4A8. In serving, this creates two different operating regimes:
 
