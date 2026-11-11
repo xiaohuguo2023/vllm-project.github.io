@@ -594,7 +594,7 @@ These numbers come from the [InferenceX dashboard](https://inferencex.semianalys
 ## Acknowledgements
 
 We would like to thank everyone who contributed to this collaboration,
-including Xiaohu Guo, Chang Liu, Chun Fan, Rohan Potdar, Peng Sun, and Andy
+including Xiaohu Guo, Chang Liu, Chun Fan, Rohan Potdar, Lixun Zhang, Peng Sun, and Andy
 Luo.
 
 ## Resources
