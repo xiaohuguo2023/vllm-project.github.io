@@ -428,7 +428,7 @@ The optimizations interact, so their gains should not be added. Each change is e
 | Wider graph capture | Repeated TP8 runs | Residual imbalance reduced to 6-12%; 130-160 ms stalls removed |
 | Grouped-GEMM tuning | Kernel dispatch and hot shapes | Better gfx950 tile/stage choices; quantifying the standalone full-sweep contribution requires raw ablation data |
 | Swizzle gate | 28 TP4/TP8 cells | Strided layout won 23 cells; up to 19% on selected 1K/1K cells |
-| Full stack | 56-cell serving sweep | 1.63x decode-heavy geomean; 1.53x prefill-heavy geomean; up to 2.3-2.4x on individual cells |
+| Full stack | 32 sweep cells with a published counterpart | 1.63x decode-heavy geomean; 1.53x prefill-heavy geomean; up to 2.3-2.4x on individual cells |
 
 ![Ablation of the gpt-oss-120B W4A8 MI355X stack, split into three panels by metric: a cumulative profiled-window waterfall, separately measured changes as cards, and the end-to-end 32-cell throughput sweep](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/ablation.png)
 
@@ -442,7 +442,7 @@ The generation script and its input data are included with the article: [`make_a
 
 We evaluated TP1, TP2, TP4, and TP8 over concurrency 4-256 for two request shapes, producing 56 matched cells. Every run started from a cold cache with matched input and output lengths.
 
-Against the previously published MI355X-vLLM results on the same serving harness, the optimized stack delivered:
+Against the previously published MI355X-vLLM results, over the 32 cells that have a published counterpart, the optimized stack delivered:
 
 - **1.63x geometric-mean throughput improvement** on decode-heavy 1K/1K traffic;
 - **1.53x geometric-mean throughput improvement** on prefill-heavy 8K/1K traffic;
@@ -457,7 +457,7 @@ These are full-stack results. They combine more complete graph capture, stable A
 
 ### Accuracy
 
-Under the same evaluation configuration, the optimized serving path showed no accuracy regression relative to the unoptimized path.
+The optimized serving path scores inside the run-to-run band we measure for this configuration, so we observe no accuracy change attributable to the serving-path changes.
 
 We publish the evaluation manifest instead of only a headline score. Reproducing a GSM8K result requires the evaluator, metric definition, decoding parameters, and sample count:
 
