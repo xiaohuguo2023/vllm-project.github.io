@@ -106,6 +106,8 @@ $$
 AI_{ridge} = \frac{5.0\ \text{PFLOP/s}}{8\ \text{TB/s}} \approx 625\ \text{FLOP/byte}.
 $$
 
+Below that ridge a kernel is limited by bytes, above it by arithmetic. The Roofline figure in [Case study 2](#case-study-2-the-real-bottleneck-was-w4a8-moe) plots this knee for the W4A8 expert GEMM, with the 625 FLOP/byte ridge marked and the measured decode and prefill points on either side of it.
+
 A specification Roofline is a useful upper bound, not a promise that a grouped MoE kernel can sustain peak hardware throughput. For a complete hardware comparison, it should be paired with sustainable HBM and datatype-specific compute roofs measured by microbenchmarks.
 
 ### 2. Latency-bandwidth bound for collectives
