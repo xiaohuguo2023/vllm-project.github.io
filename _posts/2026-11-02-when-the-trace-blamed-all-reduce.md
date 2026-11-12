@@ -16,7 +16,7 @@ tags:
 *A gpt-oss-120b case study in profiling, performance bounds, HIP graph capture, and W4A8 MoE tuning.*
 
 > [!NOTE]
-> **Why gpt-oss-120b?** This post is a systems case study, not a model recommendation. We use gpt-oss-120b because one workload exposes several common inference bottlenecks at once: low-intensity decode GEMMs, high-intensity prefill GEMMs, many small tensor-parallel collectives, shape-dependent graph capture, and short-K scaling at higher tensor parallelism. The method is meant to transfer to other models and accelerators.
+> **Why gpt-oss-120b?** This post is a systems case study, not a model recommendation. We use gpt-oss-120b because one workload exposes several common inference bottlenecks at once: low-intensity decode GEMMs, high-intensity prefill GEMMs, many small tensor-parallel collectives, shape-dependent graph capture, and small-K scaling at higher tensor parallelism. The method is meant to transfer to other models and accelerators.
 
 ## TL;DR
 
@@ -309,7 +309,7 @@ At **M = 8192**, representative of prefill:
 - In this model, the point sits just beyond the 625 FLOP/byte specification ridge.
 - Measured throughput was **1.19 PFLOP/s**, about **24% of the 5.0 PFLOP/s specification compute roof**.
 
-This does not prove that every production prefill shape is unambiguously compute-bound: routing balance, padding, metadata, and TP-specific short-K shapes can move the operating point. It does show that the large-M TP1 kernel sweep has substantially more compute headroom than the decode regime. Tile shape, pipeline stages, occupancy, scale handling, and short-K behavior are therefore worth tuning.
+This does not prove that every production prefill shape is unambiguously compute-bound: routing balance, padding, metadata, and TP-specific small-K shapes can move the operating point. It does show that the large-M TP1 kernel sweep has substantially more compute headroom than the decode regime. Tile shape, pipeline stages, occupancy, scale handling, and small-K behavior are therefore worth tuning.
 
 ### Optimization 1: tune grouped GEMM by serving shape
 
@@ -340,7 +340,7 @@ CDNA4 can use a swizzled MX-scale layout that is efficient for some shapes. Swiz
 - **TP4:** K = 720
 - **TP8:** K = 360
 
-At those short K values, padding to the block size required by the swizzled path can cost more than the layout saves. After retuning both paths, the plain strided layout won **23 of 28** TP4/TP8 benchmark cells and improved selected decode-heavy 1K/1K cells by as much as **19%**. The swizzled path remained useful for TP1/TP2 and in a small high-concurrency prefill corner.
+At those small K values, padding to the block size required by the swizzled path can cost more than the layout saves. After retuning both paths, the plain strided layout won **23 of 28** TP4/TP8 benchmark cells and improved selected decode-heavy 1K/1K cells by as much as **19%**. The swizzled path remained useful for TP1/TP2 and in a small high-concurrency prefill corner.
 
 The vLLM gate therefore selects:
 
@@ -365,7 +365,7 @@ Doubling the GPU count does not guarantee a 2x speedup. Tensor parallelism chang
 
 ### The expert GEMM gets shorter
 
-Moving from TP4 to TP8 reduces the expert GEMM contraction dimension from K=720 to K=360. Short-K GEMMs provide less work per launch and can use matrix hardware less efficiently. In our profile, the expert GEMMs reached only about **61% strong-scaling efficiency** from TP4 to TP8.
+Moving from TP4 to TP8 reduces the expert GEMM contraction dimension from K=720 to K=360. Small-K GEMMs provide less work per launch and can use matrix hardware less efficiently. In our profile, the expert GEMMs reached only about **61% strong-scaling efficiency** from TP4 to TP8.
 
 ### The router GEMM is replicated
 
@@ -528,13 +528,13 @@ The TP-aware CDNA4 MX-scale layout decision is internal. No user flag is require
 
 ## Remaining work
 
-### Improve short-K MoE scaling
+### Improve small-K MoE scaling
 
 The TP4-to-TP8 step reduces K from 720 to 360 and reaches only about 61% strong-scaling efficiency for the expert GEMMs. The next kernel work should target:
 
 - tile shapes designed for K=360;
 - less padding;
-- pipeline choices for short K;
+- pipeline choices for small K;
 - better MFMA utilization;
 - routing-aware tuning for small per-expert token counts.
 
