@@ -59,73 +59,26 @@ We use three models to set performance bounds:
 - **Collective latency and bandwidth:** Separate startup and synchronization latency, data-transfer time, and time spent waiting for other ranks or host progress. Bandwidth matters more for large prefill messages, while latency dominates tiny decode messages.
 - **Host timeline and control experiments:** Diagnose host dispatch gaps by comparing GPU time with end-to-end time, repeated runs, captured and eager paths, CPU placement, and per-rank arrival times.
 
-These three models form the workflow used throughout this post:
-1. **Profile:** Find the largest interval in the trace.
-2. **Bound:** Estimate how much of that interval the hardware work can plausibly require.
-3. **Evaluate:** Use a control experiment to test the first explanation.
-4. **Fix:** Change the actual limiting layer.
-5. **Re-profile:** Let the next bottleneck surface.
-
 ![Flow diagram of the five-step loop Measure, Bound, Falsify, Fix, Re-profile, with the Bound step expanding into three bounding models: kernel Roofline, collective latency-bandwidth, and host timeline with control experiments](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/workflow.png)
 
 *The Bound step uses three models, each for a different mechanism. The Roofline model applies to kernels, the latency-bandwidth model applies to collectives, and host dispatch stalls require controlled comparisons because they have no useful GPU ceiling. The collective model was critical here because the profiler range includes wait time. A long collective range therefore does not show that the interconnect was busy for the entire interval. After one bottleneck is fixed, re-profiling reveals the next mechanism and the model needed to analyze it.*
 
-The generation script is included with the article: [`make_workflow.py`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/make_workflow.py). The figure is a diagram; the only quantities on it are the MI355X specification roofs quoted above.
+## Profile: when the trace blamed all-reduce
 
----
+This figure shows the initial hypothesis that the later analysis disproved. The mismatch was clearer in our first TP8 prefill traces. The collective ranges accounted for roughly half of the profiled step, and the slowest rank spent about twice as long there as the fastest, corresponding to approximately 61% cross-rank imbalance.
 
-## Case study 1: the trace blamed all-reduce
-
-### What the trace appeared to say
-
-A TP8 decode trace showed the same pattern. On the slowest-rank critical path, the trace attributed **174 us of a 254 us per-layer interval** to the all-reduce range. This does not mean the links transferred data for 174 us. A blocking collective range also includes time spent waiting for other ranks and any skew created earlier in the step.
+We nearly started rewriting the all-reduce. Before doing that, we estimated the expected transfer time from the payload size and bandwidth.
 
 ![Initial TP8 decode attribution: 174 us in the all-reduce range and 80 us in other GPU compute](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/fig_bottleneck_reframed.png)
 
 *Initial TP8 decode attribution. The all-reduce segment is the duration of the profiler range, including synchronization wait; it is not a decomposition of wire time. In a clean run, collectives accounted for about 14% of decode kernel time.*
 
-This figure shows the initial hypothesis that the later analysis disproved.
 
-The mismatch was clearer in our first TP8 prefill traces. The collective ranges accounted for roughly half of the profiled step, and the slowest rank spent about twice as long there as the fastest, corresponding to approximately 61% cross-rank imbalance.
+## Bound: the transfer component
 
-Several explanations sounded plausible:
+For a 4096-token prefill chunk, the all-reduce payload is $$4096 \times 2880 \times 2\ \text{bytes} \approx 22.5\ \text{MB}.$$ At TP8, a two-pass all-reduce moves approximately $$2\frac{p-1}{p} = 2\frac{7}{8} = 1.75$$ times the payload, or about 39 MB of estimated wire traffic.
 
-- serial flag polling in the collective;
-- loss of the INT4 quantized path at world size eight;
-- contention among HBM writers;
-- an inefficient XGMI algorithm.
-
-We nearly started rewriting the all-reduce. Before doing that, we estimated the expected transfer time from the payload size and bandwidth.
-
-![Eight-rank aligned GPU timeline of one TP8 prefill all-reduce site. Ranks 1 to 7 enter the QuickReduce all-reduce early and stay in it for about 8 ms; rank 0 is GPU-idle across three host gaps and enters the collective last](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/prefill-before-trace.png)
-
-*This eight-rank timeline shows the same all-reduce site as the opening figure. Every bar is a measured GPU kernel from the trace. The dashed lines show that all eight ranks leave the previous all-reduce together at 0.49 ms and return from this one within 2 microseconds of each other at 9.12 ms. Ranks 1 through 7 finish the MoE block by about 1.2 ms and then wait in the collective. Rank 0 is GPU-idle for three intervals—2.98, 0.65, and 3.61 ms, or 7.23 ms total—because its host thread executes work that was not captured in the graph. Rank 0 arrives last and clears the collective in 166 microseconds. The long blue bars include the same transfer plus a wait caused by one rank's host thread.*
-
-*The clip contains only GPU kernels, so host work appears as gaps rather than bars. The 130-160 ms `_fused_add_rmsnorm_pad` stall described later comes from separate CPU-contention runs and does not appear in this window. The annotations show only the gaps measured here.*
-
-The generation script and its input data are included with the article: [`make_before_trace.py`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/make_before_trace.py) and [`iter8_l1p0_gantt.csv`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/iter8_l1p0_gantt.csv), the latter extracted from the eight-rank Perfetto clip `iter8_L1P0_8ranks_strict.json.gz`.
-
-### Bound the transfer component
-
-For a 4096-token prefill chunk, the all-reduce payload is
-
-$$
-4096 \times 2880 \times 2\ \text{bytes} \approx 22.5\ \text{MB}.
-$$
-
-At TP8, a two-pass all-reduce moves approximately
-
-$$
-2\frac{p-1}{p} = 2\frac{7}{8} = 1.75
-$$
-
-times the payload, or about 39 MB of estimated wire traffic.
-
-A clean two-pass collective on this system sustained roughly 150-240 GB/s of effective bandwidth. At that rate, the byte-transfer component is approximately
-
-$$
-\frac{39\ \text{MB}}{150\text{-}240\ \text{GB/s}} \approx 0.16\text{-}0.26\ \text{ms}.
-$$
+A clean two-pass collective on this system sustained roughly 150-240 GB/s of effective bandwidth. At that rate, the byte-transfer component is approximately $$\frac{39\ \text{MB}}{150\text{-}240\ \text{GB/s}} \approx 0.16\text{-}0.26\ \text{ms}.$$
 
 The profiled cross-rank stagger was 7.81 ms. Even using the conservative end of the bandwidth range, the stagger was about 30 times larger than the transfer component. Startup latency matters, but it does not turn 39 MB into 7.81 ms of link activity on a path that reaches much higher bandwidth in a clean run.
 
@@ -143,7 +96,7 @@ The calculation supports a specific conclusion:
 
 The calculation showed that optimizing the collective would not address the measured delay.
 
-### Evaluate the first explanation
+## Evaluate the first explanation
 
 We then ran the same serving command twice, back-to-back, and decomposed each iteration.
 
@@ -158,7 +111,7 @@ On a machine without a noisy neighboring workload, the same configuration showed
 
 Stable GPU time and unstable wall-clock time indicate that the missing time is outside GPU execution. The per-rank timeline showed how the host delay looked like a communication problem: one rank arrived late at a blocking all-reduce, while the other ranks waited inside the collective range.
 
-### Root cause: incomplete HIP graph coverage plus CPU contention
+## Fix: incomplete HIP graph coverage plus CPU contention
 
 The serving path used a fixed graph-capture window. Some shapes were captured into a HIP graph, while other shapes fell back to eager, per-kernel dispatch. When a shape took the eager path, the CPU had to submit a longer launch chain. A contended host could interrupt that chain, leaving the GPUs idle.
 
@@ -194,7 +147,7 @@ The stage ladder below uses **cumulative bottleneck-rank time over the selected 
 
 ---
 
-## Case study 2: the real bottleneck was W4A8 MoE
+## Re-profile: the real bottleneck was W4A8 MoE
 
 Once the host-side noise was removed, the largest GPU block became clear: the grouped expert GEMMs in the W4A8 MoE path.
 
@@ -283,7 +236,6 @@ Both the weight-load layout and kernel argument use the same `should_use_cdna4_m
 
 The generation script and its input data are included with the article: [`make_swizzle_gate.py`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/make_swizzle_gate.py) and [`swizzle_ab_28cell.csv`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/swizzle_ab_28cell.csv).
 
----
 
 ## Why TP8 did not automatically beat TP4
 
@@ -324,7 +276,6 @@ There is no universal best tensor-parallel degree. It is a serving-policy choice
 
 The generation script and its input data are included with the article: [`make_tp_crossover.py`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/make_tp_crossover.py) and [`serving_sweep_56cell.csv`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/serving_sweep_56cell.csv).
 
----
 
 ## What changed in vLLM and AITER
 
