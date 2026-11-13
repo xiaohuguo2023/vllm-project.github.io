@@ -51,53 +51,15 @@ The generation script and its input data are included with the article: [`make_h
 
 In our experiments, we used a single node with eight [AMD Instinct MI355X](https://www.amd.com/en/products/accelerators/instinct/mi350/mi355x.html) GPUs. The benchmark covered TP1, TP2, TP4, and TP8 at concurrency levels from 4 to 256, with ISL/OSL as 1K/1K and 1K/8K. Regarding profiling, we collected full `rocprof` traces at TP4 and TP8, including per-rank GPU and host timelines. We report cross-platform B200 numbers only in the appendix and treat them as a dated software snapshot, not as a general statement about either platform. 
 
+### Roofline analysis models
 
-## A bound-driven optimization workflow
+We use three models to set performance bounds:
 
-We used three different models for roofline analysis.
-
-### 1. Compute and HBM Roofline for GPU kernels
-
-For a kernel with arithmetic intensity $AI$ in FLOP/byte, the first-order performance ceiling is
-
-$$
-P_{max} = \min(P_{compute}, AI \times BW_{HBM}).
-$$
-
-This model is useful for GEMMs, normalization, and elementwise kernels. It tells us whether to look for better math utilization or fewer bytes moved.
-
-For MI355X, the hardware specification provides an 8 TB/s HBM roof. The W4A8 expert GEMM uses a mixed MXFP4-weight/FP8-activation path whose applicable dense compute ceiling is 5.0 PFLOP/s. The corresponding specification ridge point is
-
-$$
-AI_{ridge} = \frac{5.0\ \text{PFLOP/s}}{8\ \text{TB/s}} \approx 625\ \text{FLOP/byte}.
-$$
-
-A specification Roofline is a useful upper bound, not a promise that a grouped MoE kernel can sustain peak hardware throughput. For a complete hardware comparison, it should be paired with sustainable HBM and datatype-specific compute roofs measured by microbenchmarks.
-
-### 2. Latency-bandwidth bound for collectives
-
-A collective is not well described by a compute Roofline. A more useful first-order model is
-
-$$
-T_{collective} \approx \alpha \times R + \beta \times B_{wire} + T_{wait},
-$$
-
-where $\alpha$ captures startup and synchronization cost, $R$ is the number of communication rounds, $\beta$ is the inverse effective bandwidth, $B_{wire}$ is the estimated traffic on the links, and $T_{wait}$ is time spent waiting for ranks or host progress.
-
-For large prefill messages, the bandwidth term gives a strong sanity check. For tiny decode messages, the latency term dominates. In both cases, the profiler range can include $T_{wait}$, which is why a long collective range does not prove that the interconnect was busy for the whole interval.
-
-### 3. Timeline and control experiments for host gaps
-
-Host dispatch stalls do not have a useful GPU Roofline. We diagnose them by comparing:
-
-- GPU kernel time versus end-to-end time;
-- one run versus an identical back-to-back run;
-- captured versus eager execution paths;
-- isolated versus contended CPU environments;
-- per-rank arrival time at synchronization points.
+- **Compute and HBM Roofline:** Compare a GPU kernel's arithmetic intensity with the compute and memory-bandwidth limits. For the W4A8 expert GEMM, the MI355X specification roofs are 5.0 PFLOP/s and 8 TB/s, giving a ridge point of about 625 FLOP/byte.
+- **Collective latency and bandwidth:** Separate startup and synchronization latency, data-transfer time, and time spent waiting for other ranks or host progress. Bandwidth matters more for large prefill messages, while latency dominates tiny decode messages.
+- **Host timeline and control experiments:** Diagnose host dispatch gaps by comparing GPU time with end-to-end time, repeated runs, captured and eager paths, CPU placement, and per-rank arrival times.
 
 These three models form the workflow used throughout this post:
-
 1. **Profile:** Find the largest interval in the trace.
 2. **Bound:** Estimate how much of that interval the hardware work can plausibly require.
 3. **Evaluate:** Use a control experiment to test the first explanation.
