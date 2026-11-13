@@ -55,7 +55,7 @@ In our experiments, we used a single node with eight [AMD Instinct MI355X](https
 
 We use three models to set performance bounds:
 
-- **Compute and HBM Roofline:** Compare a GPU kernel's arithmetic intensity with the compute and memory-bandwidth limits. For the W4A8 expert GEMM, the MI355X specification roofs are 5.0 PFLOP/s and 8 TB/s, giving a ridge point of about 625 FLOP/byte.
+- **Kernel and HBM Roofline:** Compare a GPU kernel's arithmetic intensity with the compute and memory-bandwidth limits. For the W4A8 expert GEMM, the MI355X specification roofs are 5.0 PFLOP/s and 8 TB/s, giving a ridge point of about 625 FLOP/byte.
 - **Collective latency and bandwidth:** Separate startup and synchronization latency, data-transfer time, and time spent waiting for other ranks or host progress. Bandwidth matters more for large prefill messages, while latency dominates tiny decode messages.
 - **Host timeline and control experiments:** Diagnose host dispatch gaps by comparing GPU time with end-to-end time, repeated runs, captured and eager paths, CPU placement, and per-rank arrival times.
 
@@ -449,28 +449,6 @@ vllm serve "$MODEL" \
 The TP-aware CDNA4 MX-scale layout decision is internal. No user flag is required: TP1/TP2 select the swizzled path, while TP4/TP8 select the strided path.
 
 `VLLM_ROCM_QUICK_REDUCE_QUANTIZATION=INT4` enables the quantized collective path only when its dispatch conditions are met. It does not reduce every payload. In the profiled 4096-token TP8 prefill case, the threshold condition did not select the INT4 path.
-
----
-
-## Remaining work
-
-### Improve short-K MoE scaling
-
-The TP4-to-TP8 step reduces K from 720 to 360 and reaches only about 61% strong-scaling efficiency for the expert GEMMs. The next kernel work should target:
-
-- tile shapes designed for K=360;
-- less padding;
-- pipeline choices for short K;
-- better MFMA utilization;
-- routing-aware tuning for small per-expert token counts.
-
-### Overlap communication with computation
-
-After the host stalls were removed, decode collectives still accounted for about 14% of kernel time in a clean run and remained on the critical path. One option is to replace fully blocking reductions with reduce-scatter/all-gather patterns and sequence-parallel execution. This would let the next local normalization or projection begin before communication completes.
-
-### Test more production-like traffic
-
-The sweep used fixed request shapes. Mixed context lengths, prefix-cache hits, multi-turn traffic, and bursty arrivals can change graph coverage, expert load balance, and the TP4/TP8 crossover. Repeat this workflow instead of assuming that the same configuration remains optimal.
 
 ---
 
