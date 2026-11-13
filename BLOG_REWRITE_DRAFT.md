@@ -140,16 +140,11 @@ The original dispatch did not consistently select efficient tile sizes and pipel
 
 ### Optimization 2: fix output allocation before measuring speed
 
-The same AITER work also fixed a correctness issue. The kernel allocated output storage using the logical, unpadded N while computing tiles over padded N. When `block_n` did not divide the logical dimension, the last tile could write beyond the allocated buffer.
-
-The fix sizes the output buffer to padded N while preserving the logical output shape presented to the caller.
-
-Correctness constrains performance tuning: a kernel configuration is not a valid optimization if it relies on undefined memory behavior. We do not count the allocation fix as an isolated performance gain.
+The same AITER work also fixed a correctness issue. The kernel allocated output storage using the logical, unpadded N while computing tiles over padded N. When `block_n` did not divide the logical dimension, the last tile could write beyond the allocated buffer. The fix sizes the output buffer to padded N while preserving the logical output shape presented to the caller. Correctness constrains performance tuning: a kernel configuration is not a valid optimization if it relies on undefined memory behavior. We do not count the allocation fix as an isolated performance gain.
 
 ### Optimization 3: gate MX-scale swizzling by tensor parallelism
 
 CDNA4 can use a swizzled MX-scale layout that is efficient for some shapes. Swizzling, however, imposes block-size and padding constraints. Tensor parallelism shrinks the per-GPU contraction dimension:
-
 - **TP4:** K = 720
 - **TP8:** K = 360
 
@@ -169,46 +164,6 @@ Both the weight-load layout and kernel argument use the same `should_use_cdna4_m
 *The lower panel derives the mechanism from the two tuned dispatch JSONs. Both paths were retuned before the comparison, so this is a layout A/B at matched tuning quality, not a tuned-versus-untuned artefact. The swizzled MX-scale layout makes scale loads more efficient but requires `BLOCK_K` of at least 256. For the decode down-projection, which contracts over K = 2880/TP, that constraint is expensive: at TP8, K = 360, and the tuned swizzled entry steps a 512-element extent against the strided entry's 384, so 152 elements of every pass are masked against 24. Masked elements are work the GPU performs and discards, and here that discarded compute outweighs the scale-load saving. At TP4 both paths land on 768 and mask the same 48 elements; there the layouts differ only in the K step, 256 against 128. The gate follows the measurement: strided at TP4 and TP8, swizzled at TP1 and TP2, where it wins.*
 
 The generation script and its input data are included with the article: [`make_swizzle_gate.py`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/make_swizzle_gate.py) and [`swizzle_ab_28cell.csv`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/swizzle_ab_28cell.csv).
-
-
-## Why TP8 did not automatically beat TP4
-
-Doubling the GPU count does not guarantee a 2x speedup. Tensor parallelism changes both the communication pattern and the kernel shapes.
-
-### The expert GEMM gets shorter
-
-Moving from TP4 to TP8 reduces the expert GEMM contraction dimension from K=720 to K=360. Short-K GEMMs provide less work per launch and can use matrix hardware less efficiently. In our profile, the expert GEMMs reached only about **61% strong-scaling efficiency** from TP4 to TP8.
-
-### The router GEMM is replicated
-
-The router projection is mathematically
-
-$$
-[M, 2880] \times [2880, 128].
-$$
-
-It is replicated on every GPU rather than sharded. Under the profiled TP8 path, it moved to a two-pass split-K implementation and increased from roughly **200 us to 411 us**. More GPUs did not reduce that work.
-
-### The collective has another synchronization stage
-
-TP4 used a single-stage custom all-reduce, while TP8 used a two-stage path. For 5.6-23 KB decode messages, startup and synchronization dominate link-transfer time. Adding a second stage adds a fixed cost to each of roughly 73 collectives per token step.
-
-### The MoE block lost time overall
-
-In the representative trace, the MoE block increased from **4,363 us at TP4 to 4,466 us at TP8**, about 2.4% slower. Approximately 427 us of GEMM compute savings were offset by additional collective, router, and buffer-fill costs.
-
-The net TP8 improvement in that profile came from attention, not from the MoE block. End to end, this produced a workload-dependent crossover:
-
-- TP4 was often better for prefill-heavy and low-concurrency traffic.
-- TP8 became better at sufficiently high concurrency.
-
-There is no universal best tensor-parallel degree. It is a serving-policy choice tied to the request distribution and latency objective.
-
-<p align="center"><img src="/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/tp4-tp8-crossover.png" alt="TP4 and TP8 output token throughput versus concurrency for both request shapes, with the TP8/TP4 ratio below" width="80%"></p>
-
-*TP4 versus TP8 across the concurrency ladder in the same 56-cell sweep. At concurrency 4, TP8 trails on both shapes: 0.93x on 1K/1K and 0.95x on 8K/1K. It crosses over between concurrency 4 and 8, then reaches 1.12x on 1K/1K and 1.28x on 8K/1K at concurrency 256. These figures show aggregate throughput at a fixed GPU count per line, not per-GPU efficiency. After per-GPU normalization, TP4 leads at every sampled point. The annotated K is the MoE down-projection contraction depth per rank, 2880/TP.*
-
-The generation script and its input data are included with the article: [`make_tp_crossover.py`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/make_tp_crossover.py) and [`serving_sweep_56cell.csv`](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/serving_sweep_56cell.csv).
 
 
 ## What changed in vLLM and AITER
