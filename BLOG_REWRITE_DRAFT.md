@@ -38,8 +38,6 @@ A long all-reduce range does not prove that all-reduce is the bottleneck. It may
 
 A single trace therefore exposes host scheduling, collectives, memory bandwidth, matrix throughput, padding, and kernel dispatch.
 
-The analysis is also useful to readers who do not have an eight-GPU MI355X node. Reproducing the final throughput number requires the hardware, but following the reasoning does not. A trace excerpt, a few payload calculations, the Roofline script, and per-rank timing data are enough to follow the diagnosis and apply the same process elsewhere.
-
 ![Left: per-rank all-reduce kernel duration at one TP8 prefill all-reduce, showing seven ranks at about 8 ms and rank 0 at 0.17 ms. Right: the same duration compared on a log axis against bytes-on-the-wire, cross-rank wait, and the host-side stall](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/hero-trace-vs-bound.png)
 
 *The profiler correctly shows that these ranks spend about 8 ms inside the all-reduce. The left panel shows one measured all-reduce site (TP8 prefill, iteration 8, layer 1, phase 0, stock-Triton baseline). Seven ranks arrive early and block, while rank 0 finishes upstream host work and passes through in 0.17 ms. The right panel compares that duration with three possible explanations. Only the green band represents data movement, and it is roughly two orders of magnitude smaller than the other two. The panel combines three types of data. The wire band is an analytic bound for 39 MB of two-pass BF16 traffic at 150-240 GB/s effective, plus one 0.22 ms measurement taken after all eight ranks arrived. The blue band is the measured cross-rank spread at this site. The red band is the separately observed `_fused_add_rmsnorm_pad` host stall, which affects all eight ranks instead of staggering them. The stalled rank and iteration vary across runs, but the host stall does not.*
@@ -69,32 +67,20 @@ This figure shows the initial hypothesis that the later analysis disproved. The 
 
 We nearly started rewriting the all-reduce. Before doing that, we estimated the expected transfer time from the payload size and bandwidth.
 
-![Initial TP8 decode attribution: 174 us in the all-reduce range and 80 us in other GPU compute](/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/fig_bottleneck_reframed.png)
+<p align="center"><img src="/assets/figures/2026-11-02-when-the-trace-blamed-all-reduce/fig_bottleneck_reframed.png" alt="Initial TP8 decode attribution: 174 us in the all-reduce range and 80 us in other GPU compute" width="80%"></p>
 
 *Initial TP8 decode attribution. The all-reduce segment is the duration of the profiler range, including synchronization wait; it is not a decomposition of wire time. In a clean run, collectives accounted for about 14% of decode kernel time.*
 
 
 ## Bound: the transfer component
 
-For a 4096-token prefill chunk, the all-reduce payload is $$4096 \times 2880 \times 2\ \text{bytes} \approx 22.5\ \text{MB}.$$ At TP8, a two-pass all-reduce moves approximately $$2\frac{p-1}{p} = 2\frac{7}{8} = 1.75$$ times the payload, or about 39 MB of estimated wire traffic.
-
-A clean two-pass collective on this system sustained roughly 150-240 GB/s of effective bandwidth. At that rate, the byte-transfer component is approximately $$\frac{39\ \text{MB}}{150\text{-}240\ \text{GB/s}} \approx 0.16\text{-}0.26\ \text{ms}.$$
+For a 4096-token prefill chunk, the all-reduce payload is $$4096 \times 2880 \times 2\ \text{bytes} \approx 22.5\ \text{MB}.$$ At TP8, a two-pass all-reduce moves approximately $$2\frac{p-1}{p} = 2\frac{7}{8} = 1.75$$ times the payload, or about 39 MB of estimated wire traffic. A clean two-pass collective on this system sustained roughly 150-240 GB/s of effective bandwidth. At that rate, the byte-transfer component is approximately $$\frac{39\ \text{MB}}{150\text{-}240\ \text{GB/s}} \approx 0.16\text{-}0.26\ \text{ms}.$$
 
 The profiled cross-rank stagger was 7.81 ms. Even using the conservative end of the bandwidth range, the stagger was about 30 times larger than the transfer component. Startup latency matters, but it does not turn 39 MB into 7.81 ms of link activity on a path that reaches much higher bandwidth in a clean run.
 
 The calculation supports a specific conclusion:
 
 > **For this payload and this execution window, bandwidth could not explain the observed rank spread. The collective was spending most of the interval waiting, not transferring.**
-
-| Quantity | Value |
-|---|---:|
-| Payload | 22.5 MB |
-| Estimated TP8 wire traffic | 39 MB |
-| Effective bandwidth in clean runs | 150-240 GB/s |
-| Estimated transfer component | 0.16-0.26 ms |
-| Observed cross-rank stagger | 7.81 ms |
-
-The calculation showed that optimizing the collective would not address the measured delay.
 
 ## Evaluate the first explanation
 
